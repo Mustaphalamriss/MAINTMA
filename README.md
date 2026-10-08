@@ -1,1 +1,1262 @@
-# MAINTMA
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CVG Connect | MOROCCO</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        :root { --primary: #002b5c; --accent: #00d4ff; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f8fafc; --purple: #8b5cf6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); padding: 10px; color: #1e293b; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes pulse-heart { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        @keyframes stockBlink { 0% { background-color: #fee2e2; } 50% { background-color: transparent; } 100% { background-color: #fee2e2; } }
+        .heart-blink { color: #ff4d4d; display: inline-block; animation: pulse-heart 0.8s infinite; margin-left: 3px; }
+        header { background: var(--primary); color: white; padding: 15px 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0, 43, 92, 0.2); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; }
+        .header-info h2 { font-size: 1.4rem; margin: 0; }
+        .header-info small { color: var(--accent); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; display: block; }
+        .logout-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; padding: 5px; }
+        .slogan-container { width: 100%; display: flex; justify-content: center; align-items: center; padding-top: 5px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .slogan { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #ffffff; }
+        .card { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .grid-kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .kpi-card { background: white; padding: 12px; border-radius: 15px; border-left: 5px solid var(--accent); position: relative; }
+        .kpi-card span { display: block; font-size: 0.65rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .kpi-card b { font-size: 1.1rem; color: var(--primary); }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-stop { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-ghost { background: #f1f5f9; color: #64748b; margin-top: 8px; }
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; margin-bottom: 10px; outline: none; background: #fff; font-size: 0.9rem; }
+        .hidden { display: none !important; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 20px; backdrop-filter: blur(5px); }
+        .status-tag { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
+        .tag-open { background: #fee2e2; color: #ef4444; }
+        .tag-progress { background: #fef3c7; color: #d97706; animation: blink 1s infinite; border: 1px solid #fcd34d; display: inline-flex; align-items: center; gap: 5px; }
+        .low-stock-alert { animation: stockBlink 1.5s infinite; border: 1.5px solid #ef4444 !important; }
+        .stock-table { width: 100%; border-collapse: collapse; }
+        .stock-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9; background: #fff; border-radius: 8px; margin-bottom: 5px; }
+        .user-actions i { cursor: pointer; margin-left: 10px; padding: 5px; }
+        .archive-item { border-left: 4px solid var(--primary); padding: 12px; margin-bottom: 12px; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .archive-item b { color: var(--primary); font-size: 1rem; display: block; margin-bottom: 4px; }
+        .archive-item .meta { font-size: 0.75rem; color: #64748b; font-weight: 600; display: flex; justify-content: space-between; margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 5px; }
+        .archive-item .badge-proj { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; }
+        .archive-item .duration-tag { color: var(--success); font-weight: 800; }
+        #login-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #001a3d 0%, #002b5c 100%); z-index: 9999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+        #login-overlay .card { width: 360px; padding: 40px 30px; background: rgba(255, 255, 255, 0.95); border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; border: 1px solid rgba(255, 255, 255, 0.3); }
+        #login-overlay h2 { color: #002b5c; font-size: 1.8rem; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; }
+        #login-overlay input { width: 100%; padding: 15px 20px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 14px; background: #f8fafc; font-size: 1rem; transition: all 0.3s ease; }
+        #login-overlay input:focus { border-color: #00d4ff; background: #ffffff; outline: none; box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.15); }
+        #login-overlay .btn-warning { width: 100%; padding: 16px; background: #002b5c; color: white; border: none; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 0.2s, background 0.3s; margin-top: 10px; }
+        .logo-container { display: flex; align-items: center; gap: 10px; font-size: 1.6rem; font-weight: 800; }
+        .brand { color: white; }
+        .connect { color: var(--accent); text-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+        .connection-line { position: relative; width: 30px; height: 2px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
+        .signal { position: absolute; top: 0; left: 0; width: 8px; height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent); border-radius: 2px; animation: moveSignal 1.5s infinite linear; }
+        @keyframes moveSignal { 0% { left: -10%; opacity: 0; } 50% { opacity: 1; } 100% { left: 110%; opacity: 0; } }
+        @keyframes blink-green { 0% { opacity: 1; color: #10b981; } 50% { opacity: 0.3; } 100% { opacity: 1; color: #10b981; } }
+        @keyframes blink-red { 0% { opacity: 1; color: #ef4444; } 50% { opacity: 0.3; } 100% { opacity: 1; color: #ef4444; } }
+        .online-status { animation: blink-green 1.5s infinite; color: #10b981 !important; }
+        .offline-status { animation: blink-red 1s infinite; color: #ef4444 !important; }
+        #offline-banner { display: none; background: var(--danger); color: white; text-align: center; padding: 5px; font-size: 0.8rem; font-weight: 800; position: fixed; top: 0; left: 0; right: 0; z-index: 10001; }
+        .kpi-card.critical { background: #fee2e2 !important; border-left: 5px solid var(--danger) !important; animation: shake 0.5s ease-in-out; }
+        .kpi-card.critical b { color: var(--danger) !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .waiting-notify {
+            background: #fff7ed;
+            border: 1.5px dashed #f59e0b;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            color: #92400e;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .tech-id-auto {
+            background: #f0fdf4 !important;
+            border-color: var(--success) !important;
+            color: #166534 !important;
+            font-weight: 700 !important;
+            cursor: not-allowed;
+        }
+        .tech-id-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0fdf4;
+            border: 1.5px solid var(--success);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+        }
+        .tech-id-badge i { color: var(--success); font-size: 0.9rem; }
+        .tech-id-badge span { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+        .tech-id-badge b { color: #166534; font-size: 0.95rem; }
+        #mute-btn { display:none; background:var(--danger); border:none; color:white; cursor:pointer; font-size:1rem; padding:6px 10px; border-radius:10px; animation:pulse-mute 1s infinite; }
+        #mute-btn.muted { background:#475569; animation:none; }
+        @keyframes pulse-mute { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.5)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,0)} }
+        #alert-sound-banner { display:none; background:linear-gradient(90deg,#dc2626,#b91c1c); color:white; text-align:center; padding:8px 15px; font-size:0.82rem; font-weight:800; border-radius:12px; margin-bottom:10px; animation:blink 1s infinite; cursor:pointer; }
+        /* DASHBOARD MODAL */
+        #dashboardModal { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; justify-content:center; align-items:flex-start; z-index:10000; padding:10px; backdrop-filter:blur(5px); overflow-y:auto; }
+        #dashboardModal .dash-inner { background:var(--bg); width:100%; max-width:500px; border-radius:20px; padding:15px; margin:auto; }
+        .dash-close-btn { background:var(--primary); color:white; border:none; border-radius:10px; padding:10px 18px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:0.85rem; margin-bottom:15px; width:100%; justify-content:center; }
+    </style>
+</head>
+
+<body onclick="enableAudio()">
+
+   <div id="login-overlay">
+    <div class="card">
+        <h2 style="margin-bottom:15px; color:var(--primary)">
+            CVG-<span style="color:var(--accent)">Innovation</span>
+        </h2>
+        <div style="position:relative;">
+            <input type="text" id="login-user" placeholder="Staff ID / Matricule">
+        </div>
+        <div style="position:relative;">
+            <input type="password" id="login-pass" placeholder="Password">
+        </div>
+        <button class="btn btn-warning" onclick="handleLogin()">ACCESS SYSTEM</button>
+        <p style="margin-top: 20px; font-size: 0.75rem; color: #64748b; font-weight: 600;">CVG CONNECT SYSTEM v2.0</p>
+    </div>
+</div>
+
+    <div id="app-content" class="hidden">
+        <header>
+            <div class="header-top">
+                <div class="header-info">
+                    <small id="roleText"></small>
+                    <h2 class="logo-container">
+                        <span class="brand">CVG</span>
+                        <div class="connection-line"><div class="signal"></div></div>
+                        <span class="connect">Connect</span>
+                    </h2>
+                </div>
+                <div id="offline-banner">NO INTERNET CONNECTION - DATA NOT SYNCED</div>
+                <button id="mute-btn" onclick="toggleMuteAlert()" title="Couper/Activer le son"><i class="fas fa-volume-up" id="mute-icon"></i></button>
+                <button class="logout-btn" id="connection-btn" onclick="location.reload()">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+            <div class="slogan-container">
+                <div class="slogan">Commercial vehicle group</div>
+            </div>
+        </header>
+
+        <div id="manager-panel" class="hidden">
+            <div class="card" style="margin-bottom:10px; border-left: 5px solid var(--purple);">
+                <label style="font-size: 0.75rem; font-weight: 800; color: var(--primary);">INDIVIDUAL MACHINE ANALYTICS:</label>
+                <select id="stats-machine-select" onchange="updateStats()" style="margin-top:5px; background: #f1f5f9;">
+                    <option value="ALL">-- ALL MACHINES (GLOBAL) --</option>
+                </select>
+            </div>
+
+            <!-- DASHBOARD BTN -->
+            <button class="btn" style="background:linear-gradient(135deg,#002b5c,#0ea5e9);color:white;margin-bottom:15px;font-size:1rem;padding:14px;border-radius:14px;" onclick="openDashboardModal()">
+                <i class="fas fa-chart-pie"></i> DASHBOARDS &amp; ANALYTICS
+            </button>
+            <div class="card" style="border-top:5px solid var(--danger);">
+                <h4 style="color:var(--danger); margin-bottom:10px;"><i class="fas fa-chart-line"></i> TOP 5 CRITICAL MACHINE (DOWNTIME)</h4>
+                <div id="top-bad-actors" style="font-size:0.85rem;"></div>
+            </div>
+            <div class="grid-kpi">
+                <div class="kpi-card"><span>Total Interventions</span><b id="m-count">0</b></div>
+                <div class="kpi-card"><span>Active Workload</span><b id="m-charge">0</b></div>
+                <div class="kpi-card"><span>MTBF (Hours)</span><b id="m-mtbf">0</b></div>
+                <div class="kpi-card"><span>Avg Waiting Time</span><b id="m-waiting">0 min</b></div>
+                <div class="kpi-card"><span>Avg Repair Time (MTTR)</span><b id="m-mttr">0 min</b></div>
+                <div class="kpi-card"><span>Avg Total Downtime</span><b id="m-total-downtime">0 min</b></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                <button class="btn" style="background:#0ea5e9; color:white; position:relative;" onclick="document.getElementById('viewStockModal').style.display='flex'">
+                    <i class="fas fa-boxes-stacked"></i> STOCK
+                    <span id="stock-alert-badge" style="display:none; position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; font-size:0.65rem; font-weight:800; width:20px; height:20px; border-radius:50%; align-items:center; justify-content:center; border:2px solid white;"></span>
+                </button>
+                <button class="btn" style="background:var(--purple); color:white;" onclick="document.getElementById('archiveModal').style.display='flex'"><i class="fas fa-archive"></i> ARCHIVES</button>
+                <button class="btn" style="background:#16a34a; color:white;" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> EXCEL REPORT</button>
+                <button class="btn" style="background:#64748b; color:white;" onclick="document.getElementById('stockModal').style.display='flex'"><i class="fas fa-plus"></i> ADD TO CATALOG</button>
+                <button class="btn" style="background:#059669; color:white; grid-column: span 2;" onclick="document.getElementById('importStockModal').style.display='flex'"><i class="fas fa-file-import"></i> IMPORT STOCK FROM EXCEL</button>
+                <button class="btn" style="background:var(--primary); color:white; grid-column: span 2;" onclick="document.getElementById('userModal').style.display='flex'"><i class="fas fa-users-gear"></i> USER MANAGEMENT</button>
+            </div>
+        </div>
+
+        <div id="op-only-wrapper" class="hidden">
+        <div id="op-panel" class="card">
+            <button class="btn btn-warning" style="background:var(--primary); color:white; margin-bottom:10px;" onclick="startScanner()"><i class="fas fa-qrcode"></i> SCAN MACHINE QR</button>
+            <div id="reader"></div>
+            <select id="in-proj" onchange="updateMachineList()">
+                <option value="SKODA A8">SKODA A8</option>
+                <option value="CRAFTER">CRAFTER</option>
+                <option value="G.CALIFORNIA">G.CALIFORNIA</option>
+            </select>
+            <select id="in-mach"></select>
+
+            <label style="font-size:0.75rem; font-weight:800; color:var(--primary); display:block; margin-bottom:5px;">TYPE D'ARRÊT:</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+                <div class="arret-type-btn" data-value="ARRET_TECHNIQUE" onclick="selectArretType(this)" style="border:2px solid #e2e8f0; border-radius:12px; padding:10px; text-align:center; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:1.3rem;">🔧</div>
+                    <div style="font-size:0.72rem; font-weight:800; color:#334155; margin-top:3px;">ARRÊT TECHNIQUE</div>
+                </div>
+                <div class="arret-type-btn" data-value="ARRET_RESEAU" onclick="selectArretType(this)" style="border:2px solid #e2e8f0; border-radius:12px; padding:10px; text-align:center; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:1.3rem;">📡</div>
+                    <div style="font-size:0.72rem; font-weight:800; color:#334155; margin-top:3px;">ARRÊT RÉSEAU</div>
+                </div>
+                <div class="arret-type-btn" data-value="NEW_REFERENCE" onclick="selectArretType(this)" style="border:2px solid #e2e8f0; border-radius:12px; padding:10px; text-align:center; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:1.3rem;">🔄</div>
+                    <div style="font-size:0.72rem; font-weight:800; color:#334155; margin-top:3px;">NEW RÉFÉRENCE</div>
+                </div>
+                <div class="arret-type-btn" data-value="WEETECH" onclick="selectArretType(this)" style="border:2px solid #e2e8f0; border-radius:12px; padding:10px; text-align:center; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:1.3rem;">📅</div>
+                    <div style="font-size:0.72rem; font-weight:800; color:#334155; margin-top:3px;">WEETECH</div>
+                </div>
+            </div>
+            <input type="hidden" id="in-arret-type" value="">
+
+            <label style="font-size:0.75rem; font-weight:800; color:var(--primary); display:block; margin-bottom:5px;">NIVEAU DE CRITICITÉ:</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
+                <div class="niveau-btn" data-value="1" onclick="selectNiveau(this)" style="border:2px solid #fecaca; border-radius:12px; padding:10px; text-align:center; cursor:pointer; transition:0.2s; background:#fff;">
+                    <div style="font-size:1.2rem;">🔴</div>
+                    <div style="font-size:0.7rem; font-weight:800; color:#dc2626; margin-top:3px;">NIVEAU 1</div>
+                    <div style="font-size:0.6rem; color:#94a3b8; font-weight:600;">CRITIQUE</div>
+                </div>
+                <div class="niveau-btn" data-value="2" onclick="selectNiveau(this)" style="border:2px solid #fed7aa; border-radius:12px; padding:10px; text-align:center; cursor:pointer; transition:0.2s; background:#fff;">
+                    <div style="font-size:1.2rem;">🟠</div>
+                    <div style="font-size:0.7rem; font-weight:800; color:#ea580c; margin-top:3px;">NIVEAU 2</div>
+                    <div style="font-size:0.6rem; color:#94a3b8; font-weight:600;">MAJEUR</div>
+                </div>
+                <div class="niveau-btn" data-value="3" onclick="selectNiveau(this)" style="border:2px solid #fef08a; border-radius:12px; padding:10px; text-align:center; cursor:pointer; transition:0.2s; background:#fff;">
+                    <div style="font-size:1.2rem;">🟡</div>
+                    <div style="font-size:0.7rem; font-weight:800; color:#ca8a04; margin-top:3px;">NIVEAU 3</div>
+                    <div style="font-size:0.6rem; color:#94a3b8; font-weight:600;">MINEUR</div>
+                </div>
+            </div>
+            <input type="hidden" id="in-niveau" value="">
+
+            <button class="btn btn-stop" onclick="handlePanneSignal()">SIGNAL DOWNTIME</button>
+        </div>
+
+        </div>
+        <div class="card">
+            <h4><i class="fas fa-bell"></i> ACTIVE ALERTS</h4>
+            <div id="pannes-list" style="margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="userModal" class="modal" onclick="if(event.target == this) { this.style.display='none'; resetUserForm(); }">
+        <div class="card" style="width:100%; max-width:400px; max-height: 90vh; display:flex; flex-direction:column;">
+            <h3>Manage Accounts</h3>
+            <input type="hidden" id="edit-user-key">
+            <input type="text" id="new-user-name" placeholder="Staff ID / Matricule">
+            <input type="password" id="new-user-pass" placeholder="Password">
+            <select id="new-user-role">
+                <option value="OPERATEUR">OPERATOR</option>
+                <option value="MAINTENANCE">MAINTENANCE</option>
+                <option value="MANAGER">MANAGER</option>
+            </select>
+            <button class="btn btn-success" id="btn-user-action" onclick="saveUser()">SAVE USER</button>
+            <div id="users-list-container" style="margin-top:15px; overflow-y:auto; flex-grow:1;"></div>
+        </div>
+    </div>
+
+    <div id="closeModal" class="modal">
+        <div class="card" style="width:100%; max-width:400px;">
+            <h3>Close Intervention</h3>
+            <input type="hidden" id="modal-key">
+            <div class="tech-id-badge">
+                <i class="fas fa-id-badge"></i>
+                <div>
+                    <span>Technician ID (Auto)</span><br>
+                    <b id="modal-tech-display">—</b>
+                </div>
+            </div>
+            <textarea id="modal-problem" placeholder="Problem Description"></textarea>
+            <textarea id="modal-solution" placeholder="Action Taken / Solution"></textarea>
+            <input list="spareparts" id="modal-piece" placeholder="Spare Part (Optional)">
+            <datalist id="spareparts"></datalist>
+            <input type="number" id="modal-qty" value="1" placeholder="Quantity">
+            <button class="btn btn-success" onclick="confirmClosing()">COMPLETE</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('closeModal').style.display='none'">CANCEL</button>
+        </div>
+    </div>
+
+    <div id="viewStockModal" class="modal" onclick="if(event.target == this) this.style.display='none'">
+        <div class="card" style="width:100%; max-width:450px; max-height: 85vh; display: flex; flex-direction: column;">
+            <h3>Inventory Status</h3>
+            <div id="low-stock-alert-section" style="display:none; background:#fef2f2; border:2px solid #ef4444; border-radius:12px; padding:10px; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:1.1rem;">🚨</span>
+                    <span style="font-size:0.75rem; font-weight:800; color:#dc2626; text-transform:uppercase; letter-spacing:0.5px;">LOW STOCK ALERT</span>
+                    <span id="low-stock-count" style="background:#dc2626; color:white; font-size:0.65rem; font-weight:800; padding:2px 7px; border-radius:20px;"></span>
+                </div>
+                <div id="low-stock-items" style="display:flex; flex-direction:column; gap:5px;"></div>
+            </div>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <button class="btn" style="background:var(--primary); color:white; font-size:0.7rem; padding:8px;" onclick="filterStockDisplay('ALL')">ALL</button>
+                <button class="btn" style="background:#64748b; color:white; font-size:0.7rem; padding:8px;" onclick="filterStockDisplay('PIECE')">PARTS</button>
+                <button class="btn" style="background:#8b5cf6; color:white; font-size:0.7rem; padding:8px;" onclick="filterStockDisplay('TOOL')">TOOLS</button>
+            </div>
+            <input type="text" id="stockSearchInput" placeholder="🔍 Search inventory..." onkeyup="searchStock()">
+            <div id="stock-list" style="overflow-y:auto; flex-grow: 1;"></div>
+            <button class="btn btn-ghost" onclick="document.getElementById('viewStockModal').style.display='none'">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="archiveModal" class="modal" onclick="if(event.target == this) this.style.display='none'">
+        <div class="card" style="width:100%; max-width:600px;">
+            <div id="archive-list" style="max-height:400px; overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <div id="stockModal" class="modal" onclick="if(event.target == this) this.style.display='none'">
+        <div class="card" style="width:100%; max-width:400px;">
+            <h3>Add to Catalogue / Restock</h3>
+            <label style="font-size: 0.8rem; font-weight: 800;">CATEGORY:</label>
+            <select id="cat-type" onchange="updateCatalogueList()">
+                <option value="PIECE">SPARE PARTS</option>
+                <option value="TOOL">TOOLS (EQUIPMENT)</option>
+            </select>
+            <label style="font-size: 0.8rem; font-weight: 800;">ITEM NAME:</label>
+            <select id="new-p-name" onchange="checkExistingStock()"><option value="">-- Select Item --</option></select>
+            <div id="current-stock-info" style="display:none; background:#f0fdf4; border:1.5px solid var(--success); border-radius:10px; padding:10px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75rem; font-weight:700; color:#166534;">📦 CURRENT STOCK:</span>
+                    <b id="current-stock-qty" style="color:#166534; font-size:1rem;"></b>
+                </div>
+                <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">➕ Quantity below will be ADDED to current stock</div>
+            </div>
+            <div id="new-item-info" style="display:none; background:#eff6ff; border:1.5px solid #3b82f6; border-radius:10px; padding:10px; margin-bottom:10px;">
+                <span style="font-size:0.75rem; font-weight:700; color:#1e40af;">🆕 NEW ITEM — will be created in catalogue</span>
+            </div>
+            <label style="font-size: 0.8rem; font-weight: 800;">QUANTITY TO ADD:</label>
+            <input type="number" id="new-p-qty" placeholder="Quantity" min="1">
+            <button class="btn btn-success" onclick="addNewStock()">CONFIRM ADDITION</button>
+        </div>
+    </div>
+
+    <div id="importStockModal" class="modal" onclick="if(event.target==this) this.style.display='none'">
+        <div class="card" style="width:100%; max-width:450px; max-height:90vh; display:flex; flex-direction:column;">
+            <h3 style="color:var(--primary); margin-bottom:5px;"><i class="fas fa-file-import"></i> Import Stock from Excel</h3>
+            <div style="background:#eff6ff; border:1.5px solid #3b82f6; border-radius:10px; padding:10px; margin-bottom:12px;">
+                <p style="font-size:0.78rem; font-weight:700; color:#1e40af; margin-bottom:6px;">📋 Excel format requis — 2 colonnes:</p>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                    <div style="background:white; border-radius:6px; padding:6px; text-align:center;">
+                        <div style="font-size:0.65rem; color:#64748b; font-weight:700;">COLONNE A</div>
+                        <div style="font-size:0.8rem; font-weight:800; color:var(--primary);">NOM / ARTICLE</div>
+                    </div>
+                    <div style="background:white; border-radius:6px; padding:6px; text-align:center;">
+                        <div style="font-size:0.65rem; color:#64748b; font-weight:700;">COLONNE B</div>
+                        <div style="font-size:0.8rem; font-weight:800; color:var(--primary);">QUANTITÉ</div>
+                    </div>
+                </div>
+                <p style="font-size:0.7rem; color:#64748b; margin-top:6px; font-weight:600;">⚠️ La 1ère ligne (header) sera ignorée automatiquement</p>
+            </div>
+            <label style="font-size:0.75rem; font-weight:800; color:var(--primary); margin-bottom:5px;">MODE D'IMPORT:</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+                <div class="import-mode-btn active-mode" data-mode="merge" onclick="selectImportMode(this)" style="border:2px solid var(--primary); background:#e0f2fe; border-radius:10px; padding:10px; text-align:center; cursor:pointer;">
+                    <div style="font-size:1rem;">🔄</div>
+                    <div style="font-size:0.72rem; font-weight:800; color:var(--primary);">MERGE</div>
+                    <div style="font-size:0.62rem; color:#64748b;">Ajouter/Mettre à jour</div>
+                </div>
+                <div class="import-mode-btn" data-mode="replace" onclick="selectImportMode(this)" style="border:2px solid #e2e8f0; background:#fff; border-radius:10px; padding:10px; text-align:center; cursor:pointer;">
+                    <div style="font-size:1rem;">♻️</div>
+                    <div style="font-size:0.72rem; font-weight:800; color:#dc2626;">REPLACE ALL</div>
+                    <div style="font-size:0.62rem; color:#64748b;">Remplacer tout le stock</div>
+                </div>
+            </div>
+            <input type="hidden" id="import-mode" value="merge">
+            <label for="excel-file-input" style="display:flex; align-items:center; justify-content:center; gap:10px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; padding:20px; cursor:pointer; margin-bottom:10px; transition:0.2s;" id="file-drop-zone">
+                <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem; color:#94a3b8;"></i>
+                <div>
+                    <div style="font-size:0.85rem; font-weight:800; color:#334155;">Cliquer pour choisir le fichier</div>
+                    <div style="font-size:0.7rem; color:#94a3b8;">.xlsx, .xls acceptés</div>
+                </div>
+            </label>
+            <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display:none;" onchange="previewExcelImport(this)">
+            <div id="import-preview" style="display:none; flex-grow:1; overflow-y:auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:var(--primary);">📦 APERÇU:</span>
+                    <div style="display:flex; gap:8px;">
+                        <span id="preview-count" style="font-size:0.7rem; background:#dcfce7; color:#166534; padding:2px 8px; border-radius:10px; font-weight:800;"></span>
+                        <span id="preview-warn" style="font-size:0.7rem; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:10px; font-weight:800; display:none;"></span>
+                    </div>
+                </div>
+                <div id="preview-table" style="max-height:180px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;"></div>
+            </div>
+            <button class="btn btn-success" id="btn-confirm-import" style="display:none; margin-top:10px;" onclick="confirmImportStock()">
+                <i class="fas fa-check"></i> CONFIRMER L'IMPORT
+            </button>
+            <button class="btn btn-ghost" onclick="document.getElementById('importStockModal').style.display='none'; resetImportModal()">ANNULER</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD MODAL: Chart only -->
+    <div id="dashboardModal" onclick="if(event.target.id==='dashboardModal')closeDashboardModal()">
+        <div class="dash-inner">
+            <button class="dash-close-btn" onclick="closeDashboardModal()">
+                <i class="fas fa-arrow-left"></i> RETOUR
+            </button>
+            
+            <div class="card" style="padding:12px; margin-bottom:10px; border-left:5px solid var(--accent);">
+                <label style="font-size:0.75rem; font-weight:800; color:var(--primary);">FILTER BY DATE:</label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+                    <div>
+                        <small style="font-size:0.7rem; color:#64748b; font-weight:700; display:block; margin-bottom:3px;">FROM</small>
+                        <input type="date" id="filter-date-from" onchange="updateStats()" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+                    </div>
+                    <div>
+                        <small style="font-size:0.7rem; color:#64748b; font-weight:700; display:block; margin-bottom:3px;">TO</small>
+                        <input type="date" id="filter-date-to" onchange="updateStats()" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+                    </div>
+                </div>
+                <button class="btn btn-ghost" style="margin-top:8px; padding:8px; font-size:0.75rem;" onclick="clearDateFilter()">
+                    <i class="fas fa-times"></i> CLEAR FILTER
+                </button>
+            </div>
+            <div class="card" style="padding:12px;">
+                <div style="position:relative; height:280px; width:100%;"><canvas id="downtimeChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <audio id="alertSound" loop src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script>
+        const machineData = { "SKODA A8": ["80005631", "80007235", "80007236", "80007237", "80007238", "80007239", "80007240", "80007241", "80007242", "80007243", "80007244", "80007245", "80007246"], "CRAFTER": ["80003403", "80003857", "80006951", "80006953", "80007608", "80008117", "80008118", "80008119", "80008120", "80008121", "80008122", "80008125", "80008184"], "G.CALIFORNIA": ["80006958"] };
+
+        const firebaseConfig = { apiKey: "AIzaSyASQa5cLXFllnV6EmYp-ARZ9dndWSKha6c", authDomain: "cvgmaroc-gmao.firebaseapp.com", databaseURL: "https://cvgmaroc-gmao-default-rtdb.firebaseio.com", projectId: "cvgmaroc-gmao", storageBucket: "cvgmaroc-gmao.firebasestorage.app", messagingSenderId: "72908747564", appId: "1:72908747564:web:82f646ef5dd209d03b7289" };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentUser = null, currentUserName = null, allData = [], myChart = null;
+
+        function handleLogin() {
+            const u = document.getElementById('login-user').value.trim().toLowerCase(), p = document.getElementById('login-pass').value;
+            if(u === "admin" && p === "3333") return startApp("MANAGER", "ADMIN");
+            database.ref('users/').once('value', snap => {
+                let found = false;
+                if(snap.val()) Object.values(snap.val()).forEach(usr => {
+                    if(usr.name.toLowerCase() === u && usr.pass === p) {
+                        found = true;
+                        startApp(usr.role, usr.name.toUpperCase());
+                    }
+                });
+                if(!found) alert("Access Denied: Invalid credentials");
+            });
+        }
+
+        function startApp(role, username) {
+            currentUser = role;
+            currentUserName = username;
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-content').classList.remove('hidden');
+            document.getElementById('roleText').innerText = role + " | " + username;
+            listenFirebase(); listenStock(); listenUsers();
+            if(role === 'MANAGER') {
+                document.getElementById('manager-panel').classList.remove('hidden');
+                populateMachineStatsSelect();
+            }
+            if(role === 'MAINTENANCE') {
+                document.getElementById('manager-panel').classList.remove('hidden');
+                populateMachineStatsSelect();
+            }
+            if(role === 'OPERATEUR') {
+                document.getElementById('op-only-wrapper').classList.remove('hidden');
+                updateMachineList();
+            }
+            setInterval(updateLiveTimers, 1000);
+        }
+
+        function listenFirebase() {
+            database.ref('pannes/').on('value', snap => {
+                allData = snap.val() ? Object.entries(snap.val()).map(([key, val]) => ({key, ...val})) : [];
+                renderUI();
+                renderArchives();
+                updateStats();
+                if(currentUser !== "OPERATEUR") updateCharts();
+            });
+        }
+
+        function renderUI() {
+            const container = document.getElementById('pannes-list');
+            container.innerHTML = "";
+            const actives = allData.filter(p => p.status !== 'CLOSED');
+            if(document.getElementById('m-charge')) document.getElementById('m-charge').innerText = actives.length;
+
+            actives.reverse().forEach(p => {
+                let isWaiting = p.status === 'OPEN';
+                let statusLabel = isWaiting ? 'DOWN' : 'FIXING...';
+
+                let timerSection = "";
+                if (isWaiting) {
+                    timerSection = `<div style="margin:10px 0; padding:10px; background:linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius:12px; text-align:center; border:1.5px solid #dc2626;">
+                        <small style="font-size:0.7rem; font-weight:800; color:#991b1b; text-transform:uppercase; display:block; margin-bottom:4px;">Waiting Time</small>
+                        <b class="live-waiting-timer" data-start="${p.startTs}" style="font-size:1.3rem; color:#dc2626; font-family:monospace;">00:00:00</b>
+                    </div>`;
+                } else {
+                    timerSection = `<div style="margin:10px 0; padding:10px; background:#f1f5f9; border-radius:12px; text-align:center;">
+                        <small style="font-size:0.7rem; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px;">Repair Time</small>
+                        <b class="live-timer" data-start="${p.recuTs}" style="font-size:1.3rem; color:var(--primary); font-family:monospace;">00:00:00</b>
+                    </div>`;
+                }
+
+                let actionBtn = (currentUser === 'MAINTENANCE')
+                    ? (isWaiting
+                        ? `<button class="btn btn-warning" onclick="takeCharge('${p.key}')">Accept Request</button>`
+                        : `<button class="btn btn-success" onclick="openRepriseModal('${p.key}')">FINISH REPAIR</button>`)
+                    : "";
+
+                const niveauColors = { '1': { bg: '#fee2e2', color: '#dc2626', label: '🔴 CRITIQUE' }, '2': { bg: '#ffedd5', color: '#ea580c', label: '🟠 MAJEUR' }, '3': { bg: '#fefce8', color: '#ca8a04', label: '🟡 MINEUR' } };
+                const arretLabels = { 'ARRET_TECHNIQUE': '🔧 Arrêt Technique', 'ARRET_RESEAU': '📡 Arrêt Réseau', 'NEW_REFERENCE': '🔄 New Référence', 'WEETECH': '📅 WEETECH' };
+                const niv = niveauColors[p.niveau] || { bg: '#f1f5f9', color: '#64748b', label: '—' };
+                const arretLabel = arretLabels[p.arretType] || '—';
+                const borderColor = p.niveau === '1' ? 'var(--danger)' : p.niveau === '2' ? 'var(--warning)' : (isWaiting ? 'var(--danger)' : 'var(--warning)');
+
+                container.innerHTML += `
+                    <div class="card" style="border-left:5px solid ${borderColor}">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                            <b style="font-size:1rem;">${p.mach}</b>
+                            ${isWaiting
+                                ? `<span class="status-tag tag-open">${statusLabel}</span>`
+                                : `<span class="status-tag tag-progress">${statusLabel}</span>`}
+                        </div>
+                        <small style="color:#64748b;">${p.proj}</small>
+                        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                            <span style="font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:6px; background:#e0f2fe; color:#0369a1;">${arretLabel}</span>
+                            <span style="font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:6px; background:${niv.bg}; color:${niv.color};">${niv.label}</span>
+                        </div>
+                        ${timerSection}
+                        <div>${actionBtn}</div>
+                    </div>`;
+            });
+
+            const sound = document.getElementById('alertSound');
+            const hasOpen = actives.some(p => p.status === 'OPEN');
+            const banner = document.getElementById('alert-sound-banner');
+            const muteBtn = document.getElementById('mute-btn');
+            if(currentUser === 'MAINTENANCE') {
+                if(hasOpen && !window.isMuted) {
+                    sound.play().catch(()=>{});
+                    if(banner) banner.style.display='block';
+                    if(muteBtn){muteBtn.style.display='inline-block';muteBtn.classList.remove('muted');document.getElementById('mute-icon').className='fas fa-volume-up';}
+                } else if(!hasOpen) {
+                    sound.pause(); sound.currentTime=0;
+                    if(banner) banner.style.display='none';
+                    if(muteBtn) muteBtn.style.display='none';
+                    window.isMuted=false;
+                }
+            } else {
+                sound.pause(); sound.currentTime=0;
+                if(banner) banner.style.display='none';
+                if(muteBtn) muteBtn.style.display='none';
+            }
+        }
+
+        function takeCharge(key) {
+            database.ref('pannes/'+key).update({
+                status: 'IN_PROGRESS',
+                recuTime: new Date().toLocaleString(),
+                recuTs: Date.now(),
+                techId: currentUserName
+            });
+        }
+
+        function openRepriseModal(key) {
+            document.getElementById('modal-key').value = key;
+            document.getElementById('modal-tech-display').innerText = currentUserName;
+            document.getElementById('modal-problem').value = '';
+            document.getElementById('modal-solution').value = '';
+            document.getElementById('modal-piece').value = '';
+            document.getElementById('modal-qty').value = 1;
+            document.getElementById('closeModal').style.display='flex';
+        }
+
+        function confirmClosing() {
+            const key = document.getElementById('modal-key').value;
+            const tech = currentUserName;
+            const prob = document.getElementById('modal-problem').value;
+            const sol = document.getElementById('modal-solution').value;
+            const piece = document.getElementById('modal-piece').value.toUpperCase();
+            const qty = parseInt(document.getElementById('modal-qty').value) || 0;
+
+            const item = allData.find(x => x.key === key);
+            const repairStart = item.recuTs || item.startTs;
+            const duration = Math.round((Date.now() - repairStart) / 60000);
+
+            database.ref('pannes/'+key).update({
+                status: 'CLOSED', duration,
+                techId: tech,
+                problem: prob,
+                solution: sol, piece, qty, doneTime: new Date().toLocaleString()
+            }).then(() => {
+                if(piece) {
+                    const sRef = database.ref('stock/'+piece);
+                    sRef.once('value', s => {
+                        if(s.exists()) sRef.update({qty: Math.max(0, s.val().qty - qty)});
+                    });
+                }
+                document.getElementById('closeModal').style.display='none';
+            });
+        }
+
+        function selectArretType(el) {
+            document.querySelectorAll('.arret-type-btn').forEach(b => { b.style.border = '2px solid #e2e8f0'; b.style.background = '#fff'; });
+            el.style.border = '2px solid var(--primary)';
+            el.style.background = '#e0f2fe';
+            document.getElementById('in-arret-type').value = el.getAttribute('data-value');
+        }
+
+        function selectNiveau(el) {
+            document.querySelectorAll('.niveau-btn').forEach(b => { b.style.opacity = '1'; b.style.transform = 'scale(1)'; });
+            const nv = el.getAttribute('data-value');
+            const colors = { '1': '#fecaca', '2': '#fed7aa', '3': '#fef08a' };
+            document.querySelectorAll('.niveau-btn').forEach(b => { b.style.border = `2px solid ${colors[b.getAttribute('data-value')]}`; b.style.background = '#fff'; });
+            el.style.border = `2px solid ${colors[nv]}`;
+            el.style.background = nv === '1' ? '#fee2e2' : nv === '2' ? '#ffedd5' : '#fefce8';
+            el.style.transform = 'scale(1.05)';
+            document.getElementById('in-niveau').value = nv;
+        }
+
+        function handlePanneSignal() {
+            const proj = document.getElementById('in-proj').value;
+            const mach = document.getElementById('in-mach').value;
+            const arretType = document.getElementById('in-arret-type').value;
+            const niveau = document.getElementById('in-niveau').value;
+
+            if (!arretType) { alert("⚠️ Veuillez sélectionner le TYPE D'ARRÊT !"); return; }
+            if (!niveau) { alert("⚠️ Veuillez sélectionner le NIVEAU DE CRITICITÉ !"); return; }
+
+            database.ref('pannes/').push({
+                proj, mach, status: 'OPEN',
+                arretType, niveau,
+                startTs: Date.now(),
+                dateStr: new Date().toLocaleString()
+            });
+
+            document.querySelectorAll('.arret-type-btn').forEach(b => { b.style.border='2px solid #e2e8f0'; b.style.background='#fff'; });
+            document.querySelectorAll('.niveau-btn').forEach(b => { b.style.transform='scale(1)'; const c={'1':'#fecaca','2':'#fed7aa','3':'#fef08a'}; b.style.border=`2px solid ${c[b.getAttribute('data-value')]}`; b.style.background='#fff'; });
+            document.getElementById('in-arret-type').value = '';
+            document.getElementById('in-niveau').value = '';
+        }
+
+        function updateMachineList() {
+            const p = document.getElementById('in-proj').value, s = document.getElementById('in-mach');
+            s.innerHTML = "";
+            (machineData[p] || []).forEach(m => s.innerHTML += `<option value="${m}">${m}</option>`);
+        }
+
+        function updateLiveTimers() {
+            document.querySelectorAll('.live-timer').forEach(el => {
+                const start = parseInt(el.getAttribute('data-start'));
+                if (!start) return;
+                const diff = Math.floor((Date.now() - start) / 1000);
+                const h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), s = diff%60;
+                el.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            });
+
+            document.querySelectorAll('.live-waiting-timer').forEach(el => {
+                const start = parseInt(el.getAttribute('data-start'));
+                if (!start) return;
+                const diff = Math.floor((Date.now() - start) / 1000);
+                const h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), s = diff%60;
+                el.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            });
+        }
+
+        function populateMachineStatsSelect() {
+            const select = document.getElementById("stats-machine-select");
+            if(!select) return;
+            // avoid duplicates
+            if(select.options.length > 1) return;
+            let allMachines = [];
+            Object.values(machineData).forEach(list => allMachines = allMachines.concat(list));
+            allMachines.sort().forEach(m => { select.innerHTML += `<option value="${m}">${m}</option>`; });
+        }
+
+        function clearDateFilter() {
+            document.getElementById('filter-date-from').value = '';
+            document.getElementById('filter-date-to').value = '';
+            updateStats();
+        }
+
+        function updateStats() {
+            const selectedMach = document.getElementById('stats-machine-select').value;
+            const dateFrom = document.getElementById('filter-date-from')?.value;
+            const dateTo = document.getElementById('filter-date-to')?.value;
+            const TARGET_MTTR = 30;
+
+            const machinePannes = allData.filter(p => {
+                if (p.status !== 'CLOSED') return false;
+                if (selectedMach !== "ALL" && p.mach !== selectedMach) return false;
+                if (dateFrom || dateTo) {
+                    const panneDate = new Date(p.startTs);
+                    if (dateFrom && panneDate < new Date(dateFrom)) return false;
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        if (panneDate > toDate) return false;
+                    }
+                }
+                return true;
+            });
+
+            let totalWaitingTime = 0, totalRepairTime = 0, totalDowntime = 0;
+            machinePannes.forEach(p => {
+                const waitingTime = (p.recuTs || p.startTs) - p.startTs;
+                const repairTime = (p.duration || 0) * 60 * 1000;
+                const downtime = (p.duration || 0) * 60 * 1000;
+                totalWaitingTime += waitingTime;
+                totalRepairTime += repairTime;
+                totalDowntime += downtime;
+            });
+
+            const avgWaitingTime = machinePannes.length > 0 ? Math.round(totalWaitingTime / machinePannes.length / 60000) : 0;
+            const avgRepairTime = machinePannes.length > 0 ? Math.round(totalRepairTime / machinePannes.length / 60000) : 0;
+            const avgTotalDowntime = machinePannes.length > 0 ? Math.round(totalDowntime / machinePannes.length / 60000) : 0;
+            const mttr = avgRepairTime;
+
+            document.getElementById('m-waiting').innerText = avgWaitingTime + " min";
+
+            const mttrElement = document.getElementById('m-mttr');
+            const mttrCard = mttrElement.closest('.kpi-card');
+            mttrElement.innerText = mttr + " min";
+
+            if (mttr > TARGET_MTTR) {
+                mttrCard.classList.add('critical');
+                mttrElement.innerHTML = `${mttr} min <i class="fas fa-exclamation-triangle" style="font-size:0.8rem"></i>`;
+            } else {
+                mttrCard.classList.remove('critical');
+            }
+
+            document.getElementById('m-total-downtime').innerText = avgTotalDowntime + " min";
+
+            document.getElementById('m-count').innerText = machinePannes.length;
+
+            if (machinePannes.length > 1) {
+                const timestamps = machinePannes.map(p => p.startTs).sort((a, b) => a - b);
+                const totalPeriodHours = (timestamps[timestamps.length - 1] - timestamps[0]) / (1000 * 60 * 60);
+                const mtbf = Math.round(totalPeriodHours / machinePannes.length);
+                document.getElementById('m-mtbf').innerText = mtbf + " hrs";
+            } else {
+                document.getElementById('m-mtbf').innerText = "N/A";
+            }
+
+            updateMachineChart(machinePannes, selectedMach);
+            updateBadActors();
+        }
+
+        function updateBadActors() {
+            const actorContainer = document.getElementById('top-bad-actors');
+            if (!actorContainer) return;
+            const dateFrom = document.getElementById('filter-date-from')?.value;
+            const dateTo = document.getElementById('filter-date-to')?.value;
+
+            const filteredData = allData.filter(p => {
+                if (p.status !== 'CLOSED') return false;
+                if (dateFrom || dateTo) {
+                    const panneDate = new Date(p.startTs);
+                    if (dateFrom && panneDate < new Date(dateFrom)) return false;
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        if (panneDate > toDate) return false;
+                    }
+                }
+                return true;
+            });
+
+            const machineDowntime = {};
+            filteredData.forEach(p => {
+                machineDowntime[p.mach] = (machineDowntime[p.mach] || 0) + (p.duration || 0);
+            });
+            const sortedMachines = Object.entries(machineDowntime).sort(([, a], [, b]) => b - a).slice(0, 5);
+            if (sortedMachines.length === 0) { actorContainer.innerHTML = "<p style='color:#94a3b8; text-align:center;'>No data available yet.</p>"; return; }
+            let html = "";
+            const maxVal = sortedMachines[0][1];
+            sortedMachines.forEach(([name, total], index) => {
+                const percentage = (total / maxVal) * 100;
+                html += `<div style="margin-bottom:12px;"><div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span style="font-weight:800;">#${index + 1} - ${name}</span><b style="color:var(--danger);">${total} min</b></div><div style="width:100%; height:8px; background:#f1f5f9; border-radius:10px; overflow:hidden;"><div style="width:${percentage}%; height:100%; background:linear-gradient(90deg, #f59e0b, #ef4444);"></div></div></div>`;
+            });
+            actorContainer.innerHTML = html;
+        }
+
+        function updateMachineChart(data, label) {
+            const ctx = document.getElementById('downtimeChart');
+            if(!ctx) return;
+            const TARGET_MTTR = 30;
+
+            // Group by MACHINE
+            const machMap = {};
+            data.forEach(p => {
+                const mach = p.mach;
+                if(!mach) return;
+                const waiting = Math.max(0, Math.round(((p.recuTs || p.startTs) - p.startTs) / 60000));
+                const repair = p.duration || 0;
+                if(!machMap[mach]) machMap[mach] = { waiting: 0, repair: 0, count: 0 };
+                machMap[mach].waiting += waiting;
+                machMap[mach].repair += repair;
+                machMap[mach].count++;
+            });
+
+            // Sort by total downtime desc, take top 12
+            const sorted = Object.entries(machMap)
+                .map(([mach, v]) => ({
+                    mach,
+                    avgWaiting: Math.round(v.waiting / v.count),
+                    avgRepair: Math.round(v.repair / v.count),
+                    total: v.waiting + v.repair,
+                    count: v.count
+                }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 12);
+
+            const labels = sorted.map(d => d.mach);
+            const waitingData = sorted.map(d => d.avgWaiting);
+            const repairData = sorted.map(d => d.avgRepair);
+
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Avg Waiting Time (Min)',
+                            data: waitingData,
+                            backgroundColor: 'rgba(245,158,11,0.85)',
+                            borderColor: '#f59e0b',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        },
+                        {
+                            label: 'Avg Repair Time (Min)',
+                            data: repairData,
+                            backgroundColor: 'rgba(16,185,129,0.85)',
+                            borderColor: '#10b981',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        },
+                        {
+                            label: 'TARGET MTTR (30 min)',
+                            data: new Array(labels.length).fill(TARGET_MTTR),
+                            type: 'line',
+                            borderColor: '#ef4444',
+                            borderDash: [6, 4],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 10 }, boxWidth: 12, padding: 8 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => {
+                                    const d = sorted[ctx.dataIndex];
+                                    return 'Interventions: ' + d.count;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 9 },
+                                maxRotation: 60,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            title: { display: true, text: 'Minutes (Avg)', font: { size: 10 } },
+                            ticks: { font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() { updateStats(); }
+
+        function listenStock() {
+            filterStockDisplay('ALL');
+            database.ref('stock/').on('value', snap => {
+                filterStockDisplay('ALL');
+                let lowCount = 0;
+                if (snap.val()) { Object.values(snap.val()).forEach(d => { if (d.qty <= 4) lowCount++; }); }
+                const stockBtn = document.getElementById('stock-alert-badge');
+                if (stockBtn) stockBtn.innerText = lowCount > 0 ? lowCount : '';
+                if (stockBtn) stockBtn.style.display = lowCount > 0 ? 'flex' : 'none';
+            });
+        }
+
+        function exportToExcel() {
+            const closedData = allData.filter(p => p.status === 'CLOSED');
+            const formattedData = closedData.map(p => {
+                const dateObj = new Date(p.startTs);
+                return { "DATE": p.dateStr || '', "MONTH": dateObj.toLocaleString('en-US', { month: 'long' }).toUpperCase(), "PROJECT": p.proj || '', "MACHINE": p.mach || '', "REQUESTED": p.recuTime || '', "FINISHED": p.doneTime || '', "TECH ID": p.techId || '', "PROBLEM": p.problem || '', "SOLUTION": p.solution || '', "DOWNTIME (Min)": p.duration || 0 };
+            });
+            const ws = XLSX.utils.json_to_sheet(formattedData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "CMMS_DATA");
+            XLSX.writeFile(wb, "CVG_CMMS_ANALYTICS_REPORT.xlsx");
+        }
+
+        function listenUsers() {
+            database.ref('users/').on('value', snap => {
+                const c = document.getElementById('users-list-container'); c.innerHTML = "";
+                if(snap.val()) Object.entries(snap.val()).forEach(([k, u]) => { c.innerHTML += `<div class="user-item"><span><b>${u.name}</b> (${u.role})</span><div class="user-actions"><i class="fas fa-edit" style="color:var(--primary)" onclick="editUser('${k}', '${u.name}', '${u.pass}', '${u.role}')"></i><i class="fas fa-trash" style="color:red" onclick="if(confirm('Delete user?')) database.ref('users/${k}').remove()"></i></div></div>`; });
+            });
+        }
+
+        function editUser(key, name, pass, role) {
+            document.getElementById('edit-user-key').value = key; document.getElementById('new-user-name').value = name; document.getElementById('new-user-pass').value = pass; document.getElementById('new-user-role').value = role;
+            document.getElementById('btn-user-action').innerText = "UPDATE USER"; document.getElementById('btn-user-action').style.background = "var(--primary)";
+        }
+
+        function saveUser() {
+            const key = document.getElementById('edit-user-key').value, name = document.getElementById('new-user-name').value, pass = document.getElementById('new-user-pass').value, role = document.getElementById('new-user-role').value;
+            if(!name || !pass) return alert("Please fill all fields");
+            if(key) database.ref('users/' + key).update({ name, pass, role }).then(() => resetUserForm());
+            else database.ref('users/').push({ name, pass, role }).then(() => resetUserForm());
+        }
+
+        function resetUserForm() { document.getElementById('edit-user-key').value = ""; document.getElementById('new-user-name').value = ""; document.getElementById('new-user-pass').value = ""; document.getElementById('new-user-role').value = "OPERATEUR"; document.getElementById('btn-user-action').innerText = "SAVE USER"; document.getElementById('btn-user-action').style.background = "var(--success)"; }
+
+        function checkExistingStock() {
+            const n = document.getElementById('new-p-name').value.toUpperCase();
+            const currentInfo = document.getElementById('current-stock-info');
+            const newInfo = document.getElementById('new-item-info');
+            if (!n) { currentInfo.style.display = 'none'; newInfo.style.display = 'none'; return; }
+            database.ref('stock/' + n).once('value', snap => {
+                if (snap.exists()) {
+                    document.getElementById('current-stock-qty').innerText = snap.val().qty + ' units';
+                    currentInfo.style.display = 'block';
+                    newInfo.style.display = 'none';
+                } else {
+                    currentInfo.style.display = 'none';
+                    newInfo.style.display = 'block';
+                }
+            });
+        }
+
+        function searchStock() { const f = document.getElementById('stockSearchInput').value.toUpperCase(), rows = document.querySelector(".stock-table tbody").rows; for(let r of rows) r.style.display = r.cells[0].innerText.toUpperCase().includes(f) ? "" : "none"; }
+
+        function addNewStock() {
+            const n = document.getElementById('new-p-name').value.toUpperCase();
+            const q = parseInt(document.getElementById('new-p-qty').value);
+            const type = document.getElementById('cat-type').value;
+            if (!n || isNaN(q) || q <= 0) { alert("Please complete the form with a valid quantity!"); return; }
+
+            const ref = database.ref('stock/' + n);
+            ref.once('value', snap => {
+                if (snap.exists()) {
+                    const oldQty = snap.val().qty || 0;
+                    const newQty = oldQty + q;
+                    ref.update({ qty: newQty }).then(() => {
+                        document.getElementById('stockModal').style.display = 'none';
+                        document.getElementById('new-p-qty').value = "";
+                        alert(`✅ RESTOCK SUCCESS!\n${n}: ${oldQty} ➜ ${newQty} units (+${q})`);
+                    });
+                } else {
+                    ref.set({ qty: q, type: type }).then(() => {
+                        document.getElementById('stockModal').style.display = 'none';
+                        document.getElementById('new-p-qty').value = "";
+                        alert(`✅ NEW ITEM ADDED!\n${n} added with ${q} units.`);
+                    });
+                }
+            });
+        }
+
+        function renderArchives() {
+            const l = document.getElementById('archive-list');
+            l.innerHTML = "<h3 style='margin-bottom:15px; color:var(--primary)'><i class='fas fa-history'></i> Intervention History</h3>";
+            const closedPannes = allData.filter(p => p.status === 'CLOSED').reverse();
+            if (closedPannes.length === 0) { l.innerHTML += "<p style='text-align:center; color:#94a3b8; margin-top:20px;'>No history found.</p>"; return; }
+            closedPannes.forEach(p => {
+                const arretLabels = { 'ARRET_TECHNIQUE': '🔧 Technique', 'ARRET_RESEAU': '📡 Réseau', 'NEW_REFERENCE': '🔄 New Réf.', 'WEETECH': '📅 WEETECH' };
+                const niveauLabels = { '1': '🔴 N1-Critique', '2': '🟠 N2-Majeur', '3': '🟡 N3-Mineur' };
+                const arretLabel = arretLabels[p.arretType] || '';
+                const niveauLabel = niveauLabels[p.niveau] || '';
+                l.innerHTML += `<div class="archive-item"><span class="badge-proj">${p.proj}</span><b>Machine: ${p.mach}</b>
+                    ${arretLabel || niveauLabel ? `<div style="display:flex;gap:5px;margin:4px 0;flex-wrap:wrap;">
+                        ${arretLabel ? `<span style="font-size:0.65rem;font-weight:800;padding:2px 7px;border-radius:4px;background:#e0f2fe;color:#0369a1;">${arretLabel}</span>` : ''}
+                        ${niveauLabel ? `<span style="font-size:0.65rem;font-weight:800;padding:2px 7px;border-radius:4px;background:#fee2e2;color:#dc2626;">${niveauLabel}</span>` : ''}
+                    </div>` : ''}
+                    <div style="font-size: 0.85rem; color: #475569; margin: 5px 0;"><i class="fas fa-wrench" style="font-size:0.7rem"></i> ${p.solution || 'No solution recorded'}</div><div style="font-size:0.8rem; color:#64748b; margin:3px 0;"><i class="fas fa-user-cog" style="font-size:0.7rem"></i> Tech: <b>${p.techId || 'N/A'}</b></div><div class="meta"><span><i class="far fa-calendar-alt"></i> ${p.dateStr.split(',')[0]}</span><span class="duration-tag"><i class="far fa-clock"></i> ${p.duration} min</span></div></div>`;
+            });
+        }
+
+        function startScanner() {
+            const s = new Html5Qrcode("reader");
+            s.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (t) => {
+                for(let [p, m] of Object.entries(machineData)) {
+                    if(m.includes(t.trim())) {
+                        document.getElementById('in-proj').value = p;
+                        updateMachineList();
+                        document.getElementById('in-mach').value = t.trim();
+                        s.stop();
+                        alert("Machine Identified: " + t.trim()); break;
+                    }
+                }
+            });
+        }
+
+        let importedStockData = [];
+
+        function selectImportMode(el) {
+            document.querySelectorAll('.import-mode-btn').forEach(b => { b.style.border = '2px solid #e2e8f0'; b.style.background = '#fff'; });
+            el.style.border = '2px solid var(--primary)';
+            el.style.background = '#e0f2fe';
+            document.getElementById('import-mode').value = el.getAttribute('data-mode');
+        }
+
+        function previewExcelImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+            document.getElementById('file-drop-zone').innerHTML = `
+                <i class="fas fa-file-excel" style="font-size:1.5rem; color:#16a34a;"></i>
+                <div>
+                    <div style="font-size:0.85rem; font-weight:800; color:#166534;">${file.name}</div>
+                    <div style="font-size:0.7rem; color:#94a3b8;">Fichier sélectionné ✅</div>
+                </div>`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+                    importedStockData = [];
+                    let validCount = 0, warnCount = 0;
+                    let tableHtml = '<table style="width:100%; border-collapse:collapse; font-size:0.78rem;"><thead><tr style="background:#f1f5f9;"><th style="padding:6px 8px; text-align:left;">Article</th><th style="padding:6px 8px; text-align:right;">Qty</th><th style="padding:6px 8px; text-align:center;">Type</th><th style="padding:6px 8px; text-align:center;">Statut</th></tr></thead><tbody>';
+
+                    rows.forEach((row, i) => {
+                        if (i === 0) return;
+                        const name = String(row[0] || '').trim().toUpperCase();
+                        const qty = parseInt(row[1]);
+                        if (!name || isNaN(qty)) return;
+
+                        const type = name.startsWith('TOOL-') ? 'TOOL' : 'PIECE';
+                        const isValid = qty >= 0;
+                        if (isValid) validCount++; else warnCount++;
+
+                        importedStockData.push({ name, qty, type });
+                        tableHtml += `<tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:5px 8px; font-weight:700;">${name}</td>
+                            <td style="padding:5px 8px; text-align:right; font-weight:800; color:${qty <= 4 ? '#dc2626' : '#166534'};">${qty}</td>
+                            <td style="padding:5px 8px; text-align:center;"><span style="font-size:0.62rem; font-weight:800; padding:1px 5px; border-radius:4px; background:${type === 'TOOL' ? '#ede9fe' : '#e0f2fe'}; color:${type === 'TOOL' ? '#7c3aed' : '#0369a1'};">${type}</span></td>
+                            <td style="padding:5px 8px; text-align:center;">${isValid ? '✅' : '⚠️'}</td>
+                        </tr>`;
+                    });
+
+                    tableHtml += '</tbody></table>';
+
+                    document.getElementById('preview-table').innerHTML = tableHtml;
+                    document.getElementById('preview-count').innerText = validCount + ' articles';
+                    const warnEl = document.getElementById('preview-warn');
+                    if (warnCount > 0) { warnEl.innerText = warnCount + ' erreurs'; warnEl.style.display = 'inline'; }
+                    else warnEl.style.display = 'none';
+
+                    document.getElementById('import-preview').style.display = 'block';
+                    document.getElementById('btn-confirm-import').style.display = validCount > 0 ? 'flex' : 'none';
+                } catch(err) {
+                    alert('❌ Erreur lecture fichier: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function confirmImportStock() {
+            if (importedStockData.length === 0) return;
+            const mode = document.getElementById('import-mode').value;
+            const btn = document.getElementById('btn-confirm-import');
+            btn.innerText = 'Import en cours...';
+            btn.disabled = true;
+
+            const doImport = () => {
+                const updates = {};
+                importedStockData.forEach(item => {
+                    updates['stock/' + item.name] = { qty: item.qty, type: item.type };
+                });
+                database.ref().update(updates).then(() => {
+                    alert(`✅ IMPORT RÉUSSI!\n${importedStockData.length} articles importés dans le stock.`);
+                    document.getElementById('importStockModal').style.display = 'none';
+                    resetImportModal();
+                }).catch(err => {
+                    alert('❌ Erreur Firebase: ' + err.message);
+                    btn.innerText = 'CONFIRMER L\'IMPORT';
+                    btn.disabled = false;
+                });
+            };
+
+            if (mode === 'replace') {
+                if (!confirm('⚠️ ATTENTION: Ceci va EFFACER tout le stock existant et le remplacer. Confirmer?')) {
+                    btn.innerText = 'CONFIRMER L\'IMPORT';
+                    btn.disabled = false;
+                    return;
+                }
+                database.ref('stock/').remove().then(doImport);
+            } else {
+                doImport();
+            }
+        }
+
+        function resetImportModal() {
+            importedStockData = [];
+            document.getElementById('excel-file-input').value = '';
+            document.getElementById('import-preview').style.display = 'none';
+            document.getElementById('btn-confirm-import').style.display = 'none';
+            document.getElementById('btn-confirm-import').innerText = 'CONFIRMER L\'IMPORT';
+            document.getElementById('btn-confirm-import').disabled = false;
+            document.getElementById('file-drop-zone').innerHTML = `
+                <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem; color:#94a3b8;"></i>
+                <div>
+                    <div style="font-size:0.85rem; font-weight:800; color:#334155;">Cliquer pour choisir le fichier</div>
+                    <div style="font-size:0.7rem; color:#94a3b8;">.xlsx, .xls acceptés</div>
+                </div>`;
+            document.querySelectorAll('.import-mode-btn').forEach(b => { b.style.border='2px solid #e2e8f0'; b.style.background='#fff'; });
+            document.querySelector('[data-mode="merge"]').style.border = '2px solid var(--primary)';
+            document.querySelector('[data-mode="merge"]').style.background = '#e0f2fe';
+            document.getElementById('import-mode').value = 'merge';
+        }
+
+        function openDashboardModal() {
+            document.getElementById("dashboardModal").style.display = "flex";
+            updateStats();
+            updateBadActors();
+        }
+        function closeDashboardModal() {
+            document.getElementById("dashboardModal").style.display = "none";
+        }
+
+        function enableAudio() { window.audioAllowed = true; }
+
+        function toggleMuteAlert() {
+            const sound=document.getElementById('alertSound');
+            const muteBtn=document.getElementById('mute-btn');
+            const muteIcon=document.getElementById('mute-icon');
+            const banner=document.getElementById('alert-sound-banner');
+            window.isMuted=!window.isMuted;
+            if(window.isMuted){
+                sound.pause();
+                muteBtn.classList.add('muted');
+                muteIcon.className='fas fa-volume-mute';
+                if(banner) banner.style.display='none';
+            } else {
+                sound.play().catch(()=>{});
+                muteBtn.classList.remove('muted');
+                muteIcon.className='fas fa-volume-up';
+                if(banner) banner.style.display='block';
+            }
+        }
+
+        const toolsList = Array.from({length: 30}, (_, i) => `TOOL-${i + 1}`);
+
+        function updateCatalogueList() {
+            const type = document.getElementById('cat-type').value;
+            const selectArticle = document.getElementById('new-p-name');
+            let optionsHtml = '<option value="">-- Select Article --</option>';
+            if (type === "TOOL") {
+                toolsList.forEach(tool => { optionsHtml += `<option value="${tool}">${tool}</option>`; });
+                selectArticle.innerHTML = optionsHtml;
+            } else {
+                database.ref('stock/').once('value', snap => {
+                    if (snap.val()) { Object.keys(snap.val()).forEach(name => { if(!name.startsWith('TOOL-')) { optionsHtml += `<option value="${name}">${name}</option>`; } }); }
+                    selectArticle.innerHTML = optionsHtml;
+                });
+            }
+        }
+
+        function filterStockDisplay(type) {
+            database.ref('stock/').once('value', snap => {
+                const list = document.getElementById('stock-list');
+                const lowSection = document.getElementById('low-stock-alert-section');
+                const lowItems = document.getElementById('low-stock-items');
+                const lowCount = document.getElementById('low-stock-count');
+
+                let html = '<table class="stock-table" style="width:100%"><tbody>';
+                let lowHtml = '';
+                let lowTotal = 0;
+
+                if (snap.val()) {
+                    Object.entries(snap.val()).forEach(([name, data]) => {
+                        if (data.qty <= 4) {
+                            lowTotal++;
+                            const isZero = data.qty === 0;
+                            const typeLabel = name.startsWith('TOOL-') ? 'TOOL' : 'PART';
+                            const typeColor = name.startsWith('TOOL-') ? '#8b5cf6' : '#0369a1';
+                            lowHtml += `
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:${isZero ? '#fecaca' : '#fee2e2'}; border:1px solid ${isZero ? '#dc2626' : '#fca5a5'}; border-radius:8px; padding:8px 10px;">
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span style="font-size:0.85rem;">${isZero ? '❌' : '⚠️'}</span>
+                                        <span style="font-weight:800; font-size:0.8rem; color:#1e293b;">${name}</span>
+                                        <span style="font-size:0.6rem; font-weight:800; padding:1px 6px; border-radius:4px; background:white; color:${typeColor};">${typeLabel}</span>
+                                    </div>
+                                    <b style="color:${isZero ? '#dc2626' : '#ea580c'}; font-size:0.9rem;">${data.qty} ${isZero ? '🔴' : ''}</b>
+                                </div>`;
+                        }
+                    });
+
+                    Object.entries(snap.val()).forEach(([name, data]) => {
+                        const isLow = data.qty <= 4;
+                        let showItem = false;
+                        if (type === 'ALL') showItem = true;
+                        else if (type === 'PIECE' && !name.startsWith('TOOL-')) showItem = true;
+                        else if (type === 'TOOL' && name.startsWith('TOOL-')) showItem = true;
+                        if (showItem) { html += `<tr class="${isLow ? 'low-stock-alert' : ''}"><td>${isLow ? '⚠️ ' : ''}${name}</td><td style="text-align:right;"><b>${data.qty}</b></td></tr>`; }
+                    });
+                }
+
+                if (lowTotal > 0) {
+                    lowSection.style.display = 'block';
+                    lowItems.innerHTML = lowHtml;
+                    lowCount.innerText = lowTotal + ' items';
+                } else {
+                    lowSection.style.display = 'none';
+                }
+
+                list.innerHTML = html + '</tbody></table>';
+            });
+        }
+
+        function updateConnectionStatus() {
+            const btn = document.getElementById('connection-btn');
+            const banner = document.getElementById('offline-banner');
+            if (navigator.onLine) { btn.classList.remove('offline-status'); btn.classList.add('online-status'); banner.style.display = 'none'; }
+            else { btn.classList.remove('online-status'); btn.classList.add('offline-status'); banner.style.display = 'block'; }
+        }
+
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        updateConnectionStatus();
+    </script>
+</body>
+</html>
